@@ -1,0 +1,20 @@
+﻿tr.taxonomy-group-row {
+    background-color: rgb(51, 122, 183);
+    color: white;
+}
+
+tr.taxonomy-group-row .modal-header {
+    color: black; /*before would automatically inherit color from tr.taxonomy-group-row, but not background-color*/
+}
+
+td.group-name {
+   width: 20%
+}
+
+td.image {
+    width: 10%;
+}
+
+td.options {
+    width: 10%;
+}

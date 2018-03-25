@@ -1,0 +1,93 @@
+﻿document.addEventListener("DOMContentLoaded", initAdminTaxonomyOptions);
+
+function initAdminTaxonomyOptions() {
+    attachImageUploadEvents();
+    $('.edit_tOption').on('click', function (event) {
+        onEditTaxonomyClick($(this));
+    });
+    $('.delete_tOption').on('click', function (event) {
+        onDeleteTaxonomyClick($(this));
+    });
+}
+
+function attachImageUploadEvents() {
+    var list = document.querySelectorAll(".edit-form-image");
+    for (var i = 0; i < list.length; i++) {
+        list.item(i).addEventListener("change", oldNewImagePreview);
+    }
+    document.querySelector("#addFormImage").addEventListener("change", oldNewImagePreview);
+}
+
+function oldNewImagePreview(event) {
+    var input = event.target;
+    var newImgPreview = document.querySelector(input.dataset.divTarget + " .new-img-preview");
+    var oldImgPreview = document.querySelector(input.dataset.divTarget + " .old-img-preview");
+    input.addEventListener("change", updateOldNewImageDisplay(event, oldImgPreview, newImgPreview));
+
+    var curFiles = input.files;
+    if (curFiles.length !== 0) {
+        newImgPreview.src = window.URL.createObjectURL(curFiles[0]);
+    }
+}
+
+function updateOldNewImageDisplay(event, oldPreview, newPreview) {
+    if (oldPreview != null) {
+        while (oldPreview.src !== newPreview.src) {
+            newPreview.src = oldPreview.src;
+        }
+    }
+    else {
+        var smallTransparentPixel = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+        while (newPreview.src !== smallTransparentPixel) {
+            newPreview.src = smallTransparentPixel;
+        }
+    }
+}
+
+$('#radioBtn a').on('click', function () {
+    $('#radioBtn a').removeClass('btn-info').addClass('btn-default');
+    $(this).removeClass('btn-default').addClass('btn-info');
+    var divCNTG = document.getElementById("createNewTaxonomyGroup");
+    var divUETG = document.getElementById("useExistingTaxonomyGroup");
+    if (document.querySelector("#radioBtn a.btn-info").dataset.title == "N") {
+        divCNTG.style.display = "block";
+        divCNTG.querySelector("input").removeAttribute("disabled");
+        divUETG.style.display = "none";
+        divUETG.querySelector("select").setAttribute("disabled", "");
+    }
+    else {
+        divCNTG.style.display = "none";
+        divCNTG.querySelector("input").setAttribute("disabled", "");
+        divUETG.style.display = "block";
+        divUETG.querySelector("select").removeAttribute("disabled");
+    }
+})
+
+function onEditTaxonomyClick(editLink) {
+    event.preventDefault();
+    var url = editLink.attr("href");
+    var request = makeAjaxCall(url, 'get', null, "text/plain");
+    request.done(function (response) {
+        var modal = $('#editTaxonomyModal');
+        var htmlContent = $(response.htmlContent);
+        modal.html(htmlContent);
+        var imagePreview = document.querySelector("#editTaxonomyModal .edit-form-image");
+        if (imagePreview != null)
+            imagePreview.addEventListener("change", oldNewImagePreview);
+        modal.modal('show');
+    });
+    request.fail(function (jqXHR, textStatus) {
+        alert('Uncaught Error.n' + jqXHR.responseText);
+    });
+}
+
+function onDeleteTaxonomyClick(deleteButton) {
+    event.preventDefault();
+    var data = deleteButton.data();
+    var name = data.recordName;
+    var id = data.recordId;
+    var modal = $('#deleteTaxonomyModal');
+    modal.find('#deleteId').val(id);
+    modal.find('#taxonomyToBeDeletedName').text(name);
+    modal.modal('show');
+}

@@ -1,0 +1,468 @@
+﻿var waitingDialog = waitingDialog || (function () {
+    'use strict';
+
+    // Creating modal dialog's DOM
+    var $dialog = $(
+        '<div class="modal fade" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true" style="padding-top:15%; overflow-y:visible;">' +
+        '<div class="modal-dialog modal-m">' +
+        '<div class="modal-content">' +
+        '<div class="modal-header"><h3 style="margin:0;"></h3></div>' +
+        '<div class="modal-body">' +
+        '<div class="progress progress-striped active" style="margin-bottom:0;"><div class="progress-bar" style="width: 100%"></div></div>' +
+        '</div>' +
+        '</div></div></div>');
+
+    return {
+        /**
+         * Opens dialog
+         * @param message Custom message
+         * @param options Custom options:
+         * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
+         * 				  options.progressType - bootstrap postfix for progress bar type, e.g. "success", "warning".
+         */
+        show: function (message, options) {
+            // Assigning defaults
+            if (typeof options === 'undefined') {
+                options = {};
+            }
+            if (typeof message === 'undefined') {
+                message = 'Loading';
+            }
+            var settings = $.extend({
+                dialogSize: 'm',
+                progressType: '',
+                onHide: null // This callback runs after the dialog was hidden
+            }, options);
+
+            // Configuring dialog
+            $dialog.find('.modal-dialog').attr('class', 'modal-dialog').addClass('modal-' + settings.dialogSize);
+            $dialog.find('.progress-bar').attr('class', 'progress-bar');
+            if (settings.progressType) {
+                $dialog.find('.progress-bar').addClass('progress-bar-' + settings.progressType);
+            }
+            $dialog.find('h3').text(message);
+            // Adding callbacks
+            if (typeof settings.onHide === 'function') {
+                $dialog.off('hidden.bs.modal').on('hidden.bs.modal', function (e) {
+                    settings.onHide.call($dialog);
+                });
+            }
+            // Opening dialog
+            $dialog.modal();
+        },
+        /**
+         * Closes dialog
+         */
+        hide: function () {
+            $dialog.modal('hide');
+        }
+    };
+})();
+
+
+$('.list-group.checked-list-box .list-group-item').each(function () {
+
+    // Settings
+    var $widget = $(this),
+        $checkbox = $('<input type="checkbox" class="hidden" />'),
+        color = ($widget.data('color') ? $widget.data('color') : "primary"),
+        style = ($widget.data('style') === "button" ? "btn-" : "list-group-item-"),
+        settings = {
+            on: {
+                icon: 'glyphicon glyphicon-check'
+            },
+            off: {
+                icon: 'glyphicon glyphicon-unchecked'
+            }
+        };
+
+    $widget.css('cursor', 'pointer')
+    $widget.append($checkbox);
+
+    // Event Handlers
+    $widget.on('click', function () {
+        var boolean = $checkbox.is(':checked');
+        $checkbox.prop('checked', !$checkbox.is(':checked'));
+        $checkbox.triggerHandler('change');
+        updateDisplay();
+    });
+    $checkbox.on('change', function () {
+        updateDisplay();
+    });
+
+
+    // Actions
+    function updateDisplay() {
+        var isChecked = $checkbox.is(':checked');
+
+        // Set the button's state
+        $widget.data('state', (isChecked) ? "on" : "off");
+
+        // Set the button's icon
+        $widget.find('.state-icon')
+            .removeClass()
+            .addClass('state-icon ' + settings[$widget.data('state')].icon);
+
+        // Update the button's color
+        if (isChecked) {
+            $widget.addClass(style + color + ' active');
+        } else {
+            $widget.removeClass(style + color + ' active');
+        }
+    }
+
+    // Initialization
+    function init() {
+
+        if ($widget.data('checked') === true) {
+            $checkbox.prop('checked', !$checkbox.is(':checked'));
+        }
+
+        updateDisplay();
+
+        // Inject the icon if applicable
+        if ($widget.find('.state-icon').length === 0) {
+            $widget.prepend('<span class="state-icon ' + settings[$widget.data('state')].icon + '"></span>');
+        }
+    }
+    init();
+});
+
+function getCheckedDataPost(arrayOfValues, page) {
+    waitingDialog.show(); //show waiting display dialog
+    var url = baseUrl + 'Search/GetCheckedData';
+    var request = $.ajax({
+        type: "GET",
+        url: url,
+        data: { 'taxonomyIds': arrayOfValues, 'pageNo': page },
+        traditional: true,
+        cache: false
+    });
+
+    request.done(function (response) {
+        var dynamic_sections = $('div#dynamic_sections');
+        $('div#dynamic_sections').html(response);
+    });
+
+    request.fail(function (jqXHR, textStatus) {
+        alert("Request failed: " + textStatus);
+    });
+
+    request.always(function () {
+        //get_checked_data_btn.prop("disabled", false);
+        if (typeof showMore === "function") showMore();
+        waitingDialog.hide(); //waiting display will end
+        var c = $('ul.pagination').find('a');
+        $('ul.pagination').find('a').on('click', function (event) {
+            event.preventDefault();
+            var page = $(this).attr("data-page");
+            getCheckedData(page);
+        });
+    });
+}
+
+function getCheckedData(page) {
+    var get_checked_data_btn = $('#get-checked-data');
+    //var allChk = get_checked_data_btn.nextAll('div#taxonomy_group').find('li.list-group-item');
+    var allChk = $('div#taxonomy_group').find('li.list-group-item');
+    var chkLi = allChk.filter('.list-group-item-primary.active');
+    if (chkLi.length == 0) {
+        alert('Please make selection.');
+        return false;
+    }
+
+    // get_checked_data_btn.prop("disabled", true);
+    //var chkLi = get_checked_data_btn.prev('div#taxonomy_group').find('ul.list-group.checked-list-box li.active');
+    var arrayOfValues = [];
+    chkLi.each(function () {
+        arrayOfValues.push($(this).attr('id') - 0);//text();
+    });
+    history.pushState({ sourceID: 'get-checked-data', valueOf: arrayOfValues, pageNo: page }, '', '');
+    getCheckedDataPost(arrayOfValues, page);
+}
+
+//function which get-checked-data button being clicked
+$('#get-checked-data').on('click', function (event) {
+    event.preventDefault();
+    hideTheme();
+    getCheckedData();
+    window.scrollTo(0, 0);
+});
+
+$('#clear-checked-data').on('click', function (event) {
+    event.preventDefault();
+    showTheme();
+    //$('.list-group.checked-list-box .list-group-item-primary').click();
+    location.reload();
+});
+
+
+//function which themes image being clicked
+$('.taxonomyImage').on('click', function (event) {
+    event.preventDefault();
+    hideTheme();
+    var arrayOfValues = [];
+    arrayOfValues.push(event.currentTarget.id);
+    getTaxonomyImage(null, arrayOfValues);
+    window.scrollTo(0, 0);
+});
+
+function getTaxonomyImage(page, arrayOfValues) {
+    updateSearchBtn();
+    history.pushState({ sourceID: 'taxonomyImage', valueOf: arrayOfValues, pageNo: page }, '', '');
+    checklistUpdate(arrayOfValues);
+    getTaxonomyImagePost(arrayOfValues, page);
+}
+
+
+function getTaxonomyImagePost(arrayOfValues, page) {
+    waitingDialog.show(); //show waiting display dialog
+    var request = $.ajax({
+        type: "GET",
+        url: baseUrl + "Search/GetCheckedData",
+        data: { 'taxonomyIds': arrayOfValues, 'pageNo': page },
+        traditional: true,
+        cache: false
+    });
+
+    request.done(function (response) {
+        var dynamic_sections = $('div#dynamic_sections');
+        $('div#dynamic_sections').html(response);
+    });
+
+    request.fail(function (jqXHR, textStatus) {
+        alert("Request failed: " + textStatus);
+    });
+
+    request.always(function () {
+        //get_checked_data_btn.prop("disabled", false);
+        if (typeof showMore === "function") showMore();
+        waitingDialog.hide(); //waiting display will end
+        $('ul.pagination').find('a').on('click', function (event) {
+            event.preventDefault();
+            var page = $(this).attr("data-page");
+            getTaxonomyImage(page, arrayOfValues);
+        });
+    });
+}
+
+function hideTheme() {
+    var themes = $('.themes');
+    for (var i = 0; i < themes.length; i++) {
+        $(themes[i]).hide();
+    }
+}
+function showTheme() {
+    var themes = $('.themes');
+    for (var i = 0; i < themes.length; i++) {
+        $(themes[i]).show();
+    }
+}
+
+function getSerachData(page) {
+    var form = $("#documents_and_reports_search");
+    var searchTermInput = $('[name="searchTerm"]')
+    var searchTerm = searchTermInput.val();
+    if (searchTerm.trim() == '') {
+        alert('Please enter your search terms.');
+        searchTermInput.focus();
+        return false;
+    }
+    var form_data = form.serialize();
+    history.pushState({ sourceID: 'documents_and_reports_search', valueOf: form_data, pageNo: page, searchData: searchTerm }, '', '');
+    clearChecklist();
+    updateSearchBtn();
+    getSerachDataPost(form_data, page);
+}
+
+function getSerachDataPost(form_data, page) {
+    var form = $("#documents_and_reports_search");
+    var post_url = form.attr("action");
+    var request_method = form.attr("method");
+    hideTheme();
+    if (page) {
+        form_data = form_data + "&page=" + page;
+    }
+    waitingDialog.show(); //show waiting dialog
+
+    var request = $.ajax({
+        url: post_url,
+        type: request_method,
+        data: form_data,
+        cache: false
+    });
+
+    request.done(function (response) {
+        var dynamic_sections = $('div#dynamic_sections');
+        $('div#dynamic_sections').html(response);
+    });
+    request.always(function (response) {
+        waitingDialog.hide();
+        if (typeof showMore === "function") showMore();
+        $('ul.pagination').find('a').on('click', function (event) {
+            event.preventDefault();
+            var page = $(this).attr("data-page");
+            getSerachData(page);
+        });
+        if (typeof primeDocsEdit === "function") {
+            primeDocsEdit($('#docTable'));
+        }
+    });
+}
+
+$("#documents_and_reports_search").submit(function (event) {
+    event.preventDefault();
+    getSerachData();
+    window.scrollTo(0, 0);
+});
+
+$('div#taxonomy_group').find('li').keypress(function (e) {
+    if (e.which == 32) {
+        e.preventDefault();
+        $(this).trigger('click');
+        //console.log('Space pressed');
+    }
+})
+
+//function which the selector is being clicked
+$('.list-group-item').on('click', function (event) {
+    event.preventDefault();
+    updateSearchBtn();
+});
+
+function updateSearchBtn() {
+    var allChk = $('div#taxonomy_group').find('li.list-group-item');
+    var chkLi = allChk.filter('.list-group-item-primary.active');
+    var search_btn = $('#get-checked-data');
+    var clear_btn = $('#clear-checked-data')
+    if (chkLi.length == 0) {
+        search_btn.prop("disabled", true);
+        search_btn.css("opacity", 0.4);
+        search_btn.removeClass("ready");
+        //clear_btn.prop("disabled", true);
+    } else {
+        search_btn.prop("disabled", false);
+        search_btn.css("opacity", 1);
+        search_btn.addClass("ready");
+        //clear_btn.prop("disabled", false);
+    }
+}
+
+window.onload = function () {
+    updateSearchBtn();
+};
+
+$(window).bind('popstate', function (event) {
+    // if the event has our history data on it, load the page fragment with AJAX
+    var state = event.originalEvent.state;
+    if (state) {
+        if (state.sourceID == 'get-checked-data') {
+            checklistUpdate(state.valueOf);
+            clearSearchBox();
+            getCheckedDataPost(state.valueOf, state.pageNo);
+        } else if (state.sourceID == 'documents_and_reports_search') {
+            var searchData = state.searchData;
+            document.getElementById('documents_and_reports').value = searchData;
+            clearChecklist();
+            getSerachDataPost(state.valueOf, state.pageNo);
+        } else if (state.sourceID == 'taxonomyImage') {
+            checklistUpdate(state.valueOf);
+            clearSearchBox();
+            getTaxonomyImagePost(state.valueOf, state.pageNo);
+        }
+    } else {
+        gotoHomePage();
+    }
+});
+
+function gotoHomePage() {
+    event.preventDefault();
+    showTheme();
+    //$('.list-group.checked-list-box .list-group-item-primary').click();
+    location.reload();
+}
+
+function checklistUpdate(arrayOfValues) {
+    var checklist = $('.list-group.checked-list-box .list-group-item');
+    var settings = {
+        on: {
+            icon: 'glyphicon glyphicon-check'
+        },
+        off: {
+            icon: 'glyphicon glyphicon-unchecked'
+        }
+    };
+    for (var i = 0; i < checklist.length; i++) {
+        var item = checklist[i];
+        var checkbox = getSubElementByType(item, 'checkbox');
+        var color = ($(item).data('color') ? $(item).data('color') : "primary");
+        var style = ($(item).data('style') === "button" ? "btn-" : "list-group-item-");
+        if (contains(arrayOfValues, item.id)) {
+            $(checkbox).prop('checked', true);
+            $(checkbox).triggerHandler('change');
+            // Set the button's state
+            $(item).data('state', "on");
+            // Set the button's icon
+            $(item).find('.state-icon')
+                .removeClass()
+                .addClass('state-icon ' + settings[$(item).data('state')].icon);
+            // Update the button's color
+            $(item).addClass(style + color + ' active');
+        } else {
+            $(checkbox).prop('checked', false);
+            $(checkbox).triggerHandler('change');
+            // Set the button's state
+            $(item).data('state', "off");
+            // Set the button's icon
+            $(item).find('.state-icon')
+                .removeClass()
+                .addClass('state-icon ' + settings[$(item).data('state')].icon);
+            // Update the button's color
+            $(item).removeClass(style + color + ' active');
+        }
+    }
+}
+
+function clearChecklist() {
+    var checklist = $('.list-group.checked-list-box .list-group-item');
+    for (var i = 0; i < checklist.length; i++) {
+        var item = checklist[i];
+        var checkbox = getSubElementByType(item, 'checkbox');
+        var color = ($(item).data('color') ? $(item).data('color') : "primary");
+        var style = ($(item).data('style') === "button" ? "btn-" : "list-group-item-");
+        $(checkbox).prop('checked', false);
+        $(checkbox).triggerHandler('change');
+        // Set the button's state
+        $(item).data('state', "off");
+        // Set the button's icon
+        $(item).find('.state-icon')
+            .removeClass()
+            .addClass('state-icon ' + 'glyphicon glyphicon-unchecked');
+        // Update the button's color
+        $(item).removeClass(style + color + ' active');
+    }
+}
+
+
+function clearSearchBox() {
+    document.getElementById('documents_and_reports').value = '';
+}
+
+
+function getSubElementByType(element, type) {
+    for (var i = 0; i < element.children.length; i++) {
+        if (element.children[i].type == type) {
+            return element.children[i];
+        }
+    }
+    return null;
+}
+
+function contains(list, value) {
+    for (var i = 0; i < list.length; i++) {
+        if (list[i] == value) {
+            return true;
+        }
+    }
+    return false;
+}

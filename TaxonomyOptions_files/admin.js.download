@@ -1,0 +1,235 @@
+﻿//generic function thats returns promise object
+function makeAjaxCall(url, method, data, dataType, isMultipartForm) {
+    var requestSettings = {
+        type: method,
+        beforeSend: function (request) {
+            // example with API authentication via request header
+            //request.setRequestHeader('X-AUTHORIZATION-KEY', '1234-1234-1234-1234');
+        },
+        url: url,
+        data: data,
+        dataType: !!dataType ? "json" : dataType, /* kind of response to expect */
+        cache: false
+    };
+    if (isMultipartForm) {
+        //requestSettings.cache = false;
+        requestSettings.contentType = false;
+        requestSettings.processData = false;
+    }
+    return $.ajax(requestSettings); // return the promise that `$.ajax` returns
+}
+
+
+//$(document).ready(function() {
+// get current URL path and assign 'active' class
+var pathname = window.location.pathname;
+$('.nav > li > a').removeClass('active');
+$('.nav > li > a[href="' + pathname + '"]').addClass('active');
+
+function showValidationMessages(messages) {
+    var ul = $("#validationSummary ul");
+    ul.addClass("list-group");
+    ul.html("");
+    if (messages && messages.length > 0) {
+        $.each(messages, function (i) {
+            var li = $('<li/>')
+                .addClass('list-group-item').text(messages[i])
+                .appendTo(ul);
+        });
+        return false;
+    }
+    return true;
+}
+
+
+$("#barChart_license_text").hide();
+$("#lineChart_license_text").hide();
+
+var start = moment().subtract(29, 'days');
+var end = moment();
+
+function cb(start, end) {
+    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+}
+
+$('#reportrange').daterangepicker({
+    startDate: start,
+    endDate: end,
+    ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+    }
+}, cb);
+
+cb(start, end);
+
+function doActivitySearch(begin, end, page) {
+    waitingDialog.show(); //show waiting dialog
+    var request = $.ajax({
+        type: "GET",
+        url: baseUrl + "Admin/getActivity",
+        data: { 'begin': begin.valueOf(), 'end': end.valueOf(), 'page': page },
+        cache: false
+    });
+
+    request.done(function (response) {
+        var dynamic_sections = $('div#dynamic_sections');
+        $('div#dynamic_sections').html(response);
+        //primeDocsActivityView();
+        assignActivitySearch();
+    });
+    request.fail(function (jqXHR, textStatus) {
+        alert("Request failed: " + textStatus);
+    });
+    request.always(function () {
+        waitingDialog.hide();
+    });
+}
+
+function showActivity(page) {
+    if (!page) page = 1;
+    var dateRange = document.getElementById('dateRange_Data').innerHTML;
+    var dates = dateRange.split('-');
+    var dateBegin = moment(dates[0], "MMMM D, YYYY");
+    var dateEnd = moment(dates[1], "MMMM D, YYYY").add(1, 'day');
+    doActivitySearch(dateBegin, dateEnd, page);
+}
+
+function assignActivitySearch() {
+    var dateRange = document.getElementById('dateRange_Data').innerHTML;
+    var dates = dateRange.split('-');
+    var dateBegin = moment(dates[0], "MMMM D, YYYY");
+    var dateEnd = moment(dates[1], "MMMM D, YYYY").add(1, 'day');
+    $('ul.pagination').find('a').on('click', function (event) {
+        event.preventDefault();
+        var page = $(this).attr("data-page");
+        if (!page) page = 1;
+        doActivitySearch(dateBegin, dateEnd, page);
+    });
+}
+
+//})
+
+$("#saveAddUser").click(function () {
+    var newUserName = $("#addUserModalUserName").val();
+    var rows = $("#tableBodyUsers").find("tr[data-user-name]");
+    var c = true;
+    $.each(rows, function (i, row) {
+        if (row.getAttribute("data-user-name") == newUserName) {
+            alert("User with name " + newUserName + " already exists");
+            return c = false;
+        }
+    });
+    if (!c) return false;
+
+    var data = {
+        userName: newUserName
+    };
+    event.preventDefault();
+    var request = makeAjaxCall($(this).attr("href"), 'get', data, "text/plain");
+    request.done(function (response) {
+        if (response.success) {
+            var htmlContent = $(response.htmlContent);
+            htmlContent.appendTo("#tableBodyUsers");
+        } 
+    });
+    request.fail(function (jqXHR, textStatus) {
+        alert('Uncaught Error.n' + jqXHR.responseText);
+    });
+    request.always(function (response) {
+        showValidationMessages(response.messages);
+    });
+});
+
+function visualiseResponse(res) {
+    $.each(res, function (i, obj) {
+        var tr = $("#tableBodyUsers").find("tr[data-user-name='" + obj.UserName + "']");
+        if (tr) {
+            tr.attr('data-user-id', obj.Id);
+            tr.removeClass('updatedUserRow');
+            void tr[0].offsetWidth;
+            tr.addClass('updatedUserRow');
+        }
+    });
+}
+
+function onSaveUserClick(el) {
+    var closestTr = el.closest('tr');
+    var rowHiddenInputs = closestTr.find("input:hidden");
+    var rowCheckboxes = closestTr.find("input:checkbox");
+
+    var userId = closestTr.attr("data-user-id");
+    var userName = closestTr.attr("data-user-name");
+
+    var roleNamesEl = rowHiddenInputs.filter(function () {
+        return $(this).is("[data-function-name");
+    });
+
+    var usersJson = {
+        "users": []
+    };
+    usersJson.users.push({
+        'UserId': userId,
+        'UserName': userName,
+        'RoleNames': []
+    });
+    rowCheckboxes.each(function (index, value) {
+        if ($(this).prop('checked')) {
+            var roleName = roleNamesEl[index].getAttribute('data-function-name');
+            //alert('userID = ' + userId + ' roleName ' + roleNamesEl[index].getAttribute('data-function-name'));
+            usersJson.users[0].RoleNames.push(roleName);
+        }
+    });
+    var myString = JSON.stringify(usersJson);
+    //alert(myString);
+    var postUrl = el.prop('href'); //$('#update_users_form').prop('action');
+    var request = $.post(postUrl, usersJson);
+    request.done(function (response) {
+        if (response.success) {
+            var res = $.extend({}, response.createdUsers, response.updatedUsers);
+            visualiseResponse(res);
+        }
+    });
+    request.fail(function (jqXHR, textStatus) {
+        alert('Uncaught Error.n' + jqXHR.responseText);
+    });
+    request.always(function (response) {
+        showValidationMessages(response.messages);
+    });
+}
+
+function onDeleteUserClick(el) {
+    var postUrl = el.prop('href'); //$('#delete_users_form').prop('action');
+    var userId = el.closest('tr').attr("data-user-id");
+    if (userId) {
+        var request = $.post(postUrl, { id: userId });
+        request.done(function (response) {
+            if (response.success) {
+                el.closest('tr').remove();
+            }
+        });
+        request.always(function (response) {
+            showValidationMessages(response.messages);
+        });
+    } else {
+        el.closest('tr').remove();
+    }
+}
+
+function primeUserSubmitButtons() {
+    $(document).on('click', '.saveUsersBtn', function (e) {
+        e.preventDefault();
+        onSaveUserClick($(this));
+    });
+    $(document).on('click', '.deleteUsersBtn', function (e) {
+        e.preventDefault();
+        onDeleteUserClick($(this));
+    });
+}
+
+primeUserSubmitButtons();
+

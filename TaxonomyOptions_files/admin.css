@@ -1,0 +1,293 @@
+﻿/*For admin index page*/
+
+/*For square card layout*/
+.pageTitle {
+    text-align: center;
+    margin: 10px;
+}
+
+.square-card {
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 6px;
+    background: #fff;
+    text-align: left;
+    position: relative;
+    transition: box-shadow 0.3s ease, border 0.3s ease;
+    box-shadow: 12px 15px 20px 0px rgba(46,61,73,0.15);
+    margin-bottom: 20px;
+    margin-top: 20px;
+    overflow: hidden;
+    text-align: center;
+}
+
+    .square-card:hover {
+        box-shadow: 2px 4px 8px 0px rgba(46,61,73,0.2);
+        border: none;
+    }
+
+.elements {
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    padding: 0 !important;
+    float: left;
+}
+
+.element-hover {
+    height: 4.75rem;
+    width: 98%;
+    margin: 1%;
+    color: #000000;
+    opacity: 1;
+    background-color: #d7d2be;
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    padding: 1rem !important;
+}
+
+    .element-hover:hover {
+        background-color: #116269;
+        color: #ffffff;
+    }
+
+/*For dialog*/
+.web_dialog {
+    display: none;
+    position: fixed;
+    opacity: 1;
+    background-color: white;
+    z-index: 102;
+}
+
+body.noScroll { /* ...or body.dialogShowing */
+    overflow: hidden;
+}
+
+.web_dialog_overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #000000;
+    opacity: .15;
+    filter: alpha(opacity=15);
+    -moz-opacity: .15;
+    z-index: 101;
+    display: none;
+}
+
+.navbar li a {
+    cursor: pointer;
+}
+
+/*Admin index page for icon bar*/
+.icon-bar {
+    width: 100%;
+    background-color: #555;
+    overflow: auto;
+}
+
+#adminHeader .icon-bar a:hover {
+    background-color: #000;
+}
+
+#adminHeader .active {
+    background-color: #4CAF50 !important;
+}
+
+#adminHeader .nav a {
+    color: white !important;
+    font-size: 1em !important;
+}
+
+
+/*For document page*/
+.displayInfo {
+    display: table-row;
+}
+
+.editInfo {
+    display: none;
+}
+
+.changedDocInfo {
+    background-color: yellow;
+}
+
+.search-btn:hover {
+    cursor: pointer;
+}
+
+#alphaList {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: white;
+}
+
+    #alphaList li, #pageList li {
+        float: left;
+        display: block;
+        margin-left: 1px;
+        margin-right: 1px;
+        text-decoration: none;
+    }
+
+.dialog {
+    display: none;
+}
+
+/********************************************************************/
+/*** PANEL PRIMARY ***/
+.with-nav-tabs.panel-primary .nav-tabs > li > a,
+.with-nav-tabs.panel-primary .nav-tabs > li > a:hover,
+.with-nav-tabs.panel-primary .nav-tabs > li > a:focus {
+    color: #fff;
+}
+
+    .with-nav-tabs.panel-primary .nav-tabs > .open > a,
+    .with-nav-tabs.panel-primary .nav-tabs > .open > a:hover,
+    .with-nav-tabs.panel-primary .nav-tabs > .open > a:focus,
+    .with-nav-tabs.panel-primary .nav-tabs > li > a:hover,
+    .with-nav-tabs.panel-primary .nav-tabs > li > a:focus {
+        color: #fff;
+        background-color: #3071a9;
+        border-color: transparent;
+    }
+
+.with-nav-tabs.panel-primary .nav-tabs > li.active > a,
+.with-nav-tabs.panel-primary .nav-tabs > li.active > a:hover,
+.with-nav-tabs.panel-primary .nav-tabs > li.active > a:focus {
+    color: #428bca;
+    background-color: #fff;
+    border-color: #428bca;
+    border-bottom-color: transparent;
+}
+
+
+/********************************************************************/
+/*** PANEL SUCCESS ***/
+.with-nav-tabs.panel-success .nav-tabs > li > a,
+.with-nav-tabs.panel-success .nav-tabs > li > a:hover,
+.with-nav-tabs.panel-success .nav-tabs > li > a:focus {
+    color: #3c763d;
+}
+
+    .with-nav-tabs.panel-success .nav-tabs > .open > a,
+    .with-nav-tabs.panel-success .nav-tabs > .open > a:hover,
+    .with-nav-tabs.panel-success .nav-tabs > .open > a:focus,
+    .with-nav-tabs.panel-success .nav-tabs > li > a:hover,
+    .with-nav-tabs.panel-success .nav-tabs > li > a:focus {
+        color: #3c763d;
+        background-color: #d6e9c6;
+        border-color: transparent;
+    }
+
+.with-nav-tabs.panel-success .nav-tabs > li.active > a,
+.with-nav-tabs.panel-success .nav-tabs > li.active > a:hover,
+.with-nav-tabs.panel-success .nav-tabs > li.active > a:focus {
+    color: #3c763d;
+    background-color: #fff;
+    border-color: #d6e9c6;
+    border-bottom-color: transparent;
+}
+
+/*********** edit_document ***************/
+#edit_document_form textarea {
+    width: 100%;
+}
+/*********** input type='file' ***************/
+#upload_button {
+    display: inline-block;
+}
+
+    #upload_button input[type=file] {
+        display: none;
+    }
+
+/*** edit documents table ***/
+tr.editing {
+    background-color: #d6e9c6;
+}
+
+tr.edited {
+    /*background-color: #3c763d;*/
+    background-color: #57FF7B;
+}
+
+/******modal********/
+.draggable-handler {
+    cursor: pointer
+}
+
+.modal-header {
+    background-color: #555;
+    color: #ddd;
+}
+
+    .modal-header .close {
+        color: #fff;
+    }
+
+/******modal********/
+.resizable {
+    overflow: hidden;
+    resize: both
+}
+
+/***add documents***/
+#add_new_documents_buttons {
+    /*text-align: right;*/
+}
+
+#instruction_list {
+    display: table;
+    margin: 0 auto;
+    /*text-align:left;*/
+}
+
+table.table thead {
+    color: #fff;
+    background-color: #428bca;
+    border-color: #357ebd;
+}
+
+table.table th.reverse {
+    color: #428bca;
+    background-color: #fff;
+}
+
+tr.updatedUserRow {
+    background-color: #3c763d;
+    animation-name: updatedUserRowAnimation;
+    animation-duration: 2s;
+}
+
+@keyframes updatedUserRowAnimation {
+    from {
+        background-color: white;
+    }
+
+    to {
+        background-color: #3c763d;
+    }
+}
+
+
+.fileUploaded {
+    color: rgb(0,128,0)
+}
+
+.listTitle {
+    font-weight: bold;
+    background-color: rgb(224,224,224)
+}
